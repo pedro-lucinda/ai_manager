@@ -1,10 +1,9 @@
-from dotenv import load_dotenv
-
-load_dotenv()
-
 from fastapi import FastAPI
 
+from app.config import get_settings
 from app.routers import assistant_chat, health
+
+get_settings()
 
 app = FastAPI(title="Manager")
 

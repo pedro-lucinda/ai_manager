@@ -39,7 +39,7 @@ def resolve_timezone(request_timezone: str | None = None) -> str:
         logger.debug("System timezone unavailable, trying Google Calendar.")
 
     try:
-        from app.agents.calendar_agent.calendar_tools import get_calendar_timezone
+        from app.agents.calendar.calendar import get_calendar_timezone
 
         return get_calendar_timezone()
     except Exception as exc:
