@@ -12,4 +12,4 @@ wheels/
 .cursor
 .agents
 aidlc-rule-details
-token.json
+token*.json
