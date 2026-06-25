@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manager</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <h1>Manager</h1>
+        <p class="subtitle">Gmail and Calendar assistant</p>
+        <div class="auth" id="auth" aria-label="Account connections">
+          <div class="auth-item" id="auth-gmail">
+            <span class="auth-label">Gmail</span>
+            <span class="auth-status" id="gmail-status">Checking…</span>
+            <a class="auth-button" id="gmail-connect" href="/auth/gmail/start" hidden>Connect</a>
+          </div>
+          <div class="auth-item" id="auth-calendar">
+            <span class="auth-label">Calendar</span>
+            <span class="auth-status" id="calendar-status">Checking…</span>
+            <a class="auth-button" id="calendar-connect" href="/auth/calendar/start" hidden>Connect</a>
+          </div>
+        </div>
+      </header>
+
+      <main class="chat" id="chat" aria-live="polite"></main>
+
+      <form class="composer" id="composer">
+        <textarea
+          id="message-input"
+          rows="1"
+          placeholder="Ask about your email or calendar…"
+          aria-label="Message"
+        ></textarea>
+        <button type="submit" id="send-button">Send</button>
+      </form>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

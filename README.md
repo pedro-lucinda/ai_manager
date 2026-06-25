@@ -7,20 +7,21 @@ FastAPI assistant that manages Gmail and Google Calendar through a single chat e
 ```text
 FastAPI (app/main.py)
   ├── /health          health check
+  ├── /auth            Google OAuth (Gmail + Calendar)
   └── /chat            assistant chat
         └── LangChain agent (app/agents/assistant.py)
               ├── Gmail toolkit (OAuth via token.json)
               └── Calendar toolkit (OAuth via token_calendar.json)
 ```
 
-The assistant uses one LangChain agent with tools from both Google toolkits. OAuth credentials are loaded or obtained on first tool access and stored in local token files.
+The assistant uses one LangChain agent with tools from both Google toolkits. Connect Gmail and Calendar from the web UI; tokens are saved to `token.json` and `token_calendar.json` (gitignored).
 
 ## Requirements
 
 - Python 3.14+
 - [uv](https://docs.astral.sh/uv/) for dependency management
 - Google Cloud project with Gmail API and Calendar API enabled
-- OAuth 2.0 Desktop client credentials
+- OAuth 2.0 Web or Desktop client credentials
 - OpenAI API key
 
 ## Setup
@@ -37,10 +38,14 @@ uv sync
 OPENAI_API_KEY=your-openai-api-key
 GMAIL_CLIENT_ID=your-google-client-id
 GMAIL_CLIENT_SECRET=your-google-client-secret
-GMAIL_OAUTH_PORT=8080
 ```
 
-3. On first Gmail or Calendar tool use, complete the Google OAuth flow in your browser. Tokens are saved to `token.json` and `token_calendar.json` (gitignored).
+3. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), add these authorized redirect URIs to your OAuth client:
+
+- `http://127.0.0.1:8000/auth/gmail/callback`
+- `http://127.0.0.1:8000/auth/calendar/callback`
+
+4. Start the server and connect Gmail and Calendar from the web UI. Tokens are saved locally after you sign in.
 
 ## Environment variables
 
@@ -49,7 +54,6 @@ GMAIL_OAUTH_PORT=8080
 | `OPENAI_API_KEY` | Yes | — | OpenAI API key |
 | `GMAIL_CLIENT_ID` | Yes | — | Google OAuth client ID |
 | `GMAIL_CLIENT_SECRET` | Yes | — | Google OAuth client secret |
-| `GMAIL_OAUTH_PORT` | No | `8080` | Local port for OAuth redirect |
 | `OPENAI_MODEL` | No | `gpt-4o-mini` | OpenAI model name |
 | `OPENAI_TEMPERATURE` | No | `0` | Model temperature |
 | `OPENAI_MAX_RETRIES` | No | `2` | Max OpenAI request retries |
@@ -61,12 +65,24 @@ GMAIL_OAUTH_PORT=8080
 ## Run
 
 ```bash
-fastapi dev app/main.py
+uv run fastapi dev app/main.py
 ```
 
 The API is available at `http://127.0.0.1:8000`.
 
+## Web UI
+
+After starting the server, open `http://127.0.0.1:8000/` in your browser. Use the **Connect** buttons in the header to authorize Gmail and Calendar before chatting.
+
 ## Endpoints
+
+### `GET /auth/status`
+
+Returns whether Gmail and Calendar are connected.
+
+### `GET /auth/gmail/start` / `GET /auth/calendar/start`
+
+Starts the Google OAuth flow for the given service.
 
 ### `GET /health/`
 
@@ -90,7 +106,14 @@ Send a message to the assistant.
 
 ```json
 {
-  "reply": "..."
+  "reply": "...",
+  "tool_calls": [
+    {
+      "name": "search_events",
+      "args": { "min_datetime": "2026-06-25 00:00:00" },
+      "result": "..."
+    }
+  ]
 }
 ```
 
@@ -102,6 +125,7 @@ app/
   main.py                   FastAPI application entry
   routers/
     health.py               Health endpoint
+    auth.py                 Google OAuth endpoints
     assistant_chat.py       Chat endpoint
   agents/
     assistant.py            LangChain agent factory
@@ -110,4 +134,8 @@ app/
     google_errors.py        Google error message mapping
     gmail/gmail.py
     calendar/calendar.py
+static/
+  index.html                Chat UI
+  styles.css
+  app.js
 ```

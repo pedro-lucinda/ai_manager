@@ -20,6 +20,7 @@ def get_calendar_mcp() -> list[BaseTool]:
     credentials = build_google_credentials(
         scopes=settings.calendar_scopes,
         token_file=settings.calendar_token_file,
+        service="calendar",
     )
     api_resource = build_calendar_service(credentials=credentials)
     toolkit = CalendarToolkit(api_resource=api_resource)

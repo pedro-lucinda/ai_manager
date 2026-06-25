@@ -19,6 +19,7 @@ def get_gmail_mcp() -> list[BaseTool]:
     credentials = build_google_credentials(
         scopes=settings.gmail_scopes,
         token_file=settings.gmail_token_file,
+        service="gmail",
     )
     api_resource = build_gmail_service(credentials=credentials)
     toolkit = GmailToolkit(api_resource=api_resource)

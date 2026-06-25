@@ -1,11 +1,16 @@
 import asyncio
 import logging
 
+from typing import Any
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.agents.assistant import get_assistant_agent
+from app.agents.google_auth import GoogleAuthRequiredError
 from app.agents.google_errors import google_error_detail
+from app.agents.message_utils import extract_tool_calls
+from app.routers.auth import auth_required_http_exception
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +21,15 @@ class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1)
 
 
+class ToolCallResponse(BaseModel):
+    name: str
+    args: dict[str, Any]
+    result: str | None = None
+
+
 class ChatResponse(BaseModel):
     reply: str
+    tool_calls: list[ToolCallResponse] = Field(default_factory=list)
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -28,6 +40,8 @@ async def chat(request: ChatRequest) -> ChatResponse:
     try:
         agent = await asyncio.to_thread(get_assistant_agent)
         result = await agent.ainvoke({"messages": [("user", request.message)]})
+    except GoogleAuthRequiredError as exc:
+        raise auth_required_http_exception(exc) from exc
     except ValueError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
@@ -48,4 +62,9 @@ async def chat(request: ChatRequest) -> ChatResponse:
             detail="Assistant returned an empty response.",
         )
 
-    return ChatResponse(reply=reply)
+    tool_calls = [
+        ToolCallResponse(**tool_call)
+        for tool_call in extract_tool_calls(result["messages"])
+    ]
+
+    return ChatResponse(reply=reply, tool_calls=tool_calls)

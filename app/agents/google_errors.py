@@ -29,9 +29,10 @@ def google_error_detail(exc: Exception) -> str | None:
         )
     if "redirect_uri_mismatch" in combined:
         return (
-            "Google OAuth redirect URI mismatch. Register http://localhost:8080/ "
-            "(or your GMAIL_OAUTH_PORT value) in Google Cloud Console, or use a "
-            "Desktop OAuth client."
+            "Google OAuth redirect URI mismatch. Add "
+            "http://127.0.0.1:8000/auth/gmail/callback and "
+            "http://127.0.0.1:8000/auth/calendar/callback "
+            "to your OAuth client's authorized redirect URIs in Google Cloud Console."
         )
     if (
         "accessnotconfigured" in combined
